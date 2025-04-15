@@ -1,14 +1,8 @@
-//
-//  djikstrame.cpp
-//  shared-memory
-//
-//  Created by Sarvesh Borkar on 4/15/25.
-//
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>   
 #include <sys/types.h>
-#include <sys/wait.h>  // waitpid()
+#include <sys/wait.h> 
 #include <vector>
 #include <iostream>
 #define NUM_OF_PROCESS 3
