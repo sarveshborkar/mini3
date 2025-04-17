@@ -1,1 +1,1 @@
-./build/dijkstrame
+./build/dijkstrame 3
