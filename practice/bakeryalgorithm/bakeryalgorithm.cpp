@@ -12,11 +12,15 @@
 #include <thread>
 
 // Shared Memory for flags by allocating memory to pointers
-// [ std::atomic<int> turn ]
-// [ std::atomic<int> flag[0] ]
-// [ std::atomic<int> flag[1] ]
+// [ std::atomic<int> choosing[0] ]
+// [ std::atomic<int> choosing[1] ]
 // ...
-// [ std::atomic<int> flag[N-1] ]
+// [ std::atomic<int> choosing[N-1] ]
+
+// [ std::atomic<int> number[0] ]
+// [ std::atomic<int> number[1] ]
+// ...
+// [ std::atomic<int> number[N-1] ]
 
 // Global pointer for shared memory
 void* shared_mem_global = nullptr;
@@ -36,42 +40,45 @@ void remainder_section(int process_id) {
 
 }
 
-// Dijkstra's Algorithm for Process
-void process_function(int i, int N, std::atomic<int>* turn, std::atomic<int>* flags) {
-    srand(time(nullptr) + i); // Seed random number generator differently for each process
+
+int find_max_index(int i, int N, std::atomic<int>* number){
+    int j = 0;
+    int jVal = number[0].load();
+    for(int p=1; p<N; p++){
+        if(i != p && number[p].load() > jVal){
+            j = p;
+            jVal = number[p];
+        }
+    }
+    return j;
+}
+
+// Bakery Algorithm
+void process_function(int i, int N, std::atomic<int>* choosing, std::atomic<int>* number) {
+    // Seed random number generator differently for each process
+    srand(time(nullptr) + i);
 
     while (true) {
         remainder_section(i);
-
-    //Subroutine L
-    L:
-        flags[i].store(1);
-        while (turn->load() != i) {
-            int current_turn = turn->load();
-            if (current_turn >= 0 && current_turn < N && flags[current_turn].load() == 0) {
-                turn->compare_exchange_strong(current_turn, i);
-            }
-             sched_yield();
-        }
-
-        flags[i].store(2); 
-
-        bool contention = false;
-        for (int j = 0; j < N; ++j) {
-            if (i == j) continue; 
-            if (flags[j].load() == 2) {
-                contention = true;
-                break; 
+        choosing[i].store(1);
+        int index = std::atomic<int>(find_max_index(i, N, number));
+        number[i].store(1+number[index]);
+        choosing[i].store(0);
+        
+        for(int j=0; j<N; j++){
+            if(i == j) continue;
+            else{
+                if(choosing[j].load() != 0){
+                    continue;
+                }
+                if(number[j].load() == 0 || (i<j && (number[i].load() < number[j].load()))){
+                    break;
+                }
             }
         }
-
-        if (contention) {
-            sched_yield(); 
-            goto L; 
-        }
-
         critical_section(i);
-        flags[i].store(0); // Reset flag
+        number[i].store(0);
+       
     }
 }
 
@@ -87,9 +94,9 @@ int main(int argc, char* argv[]) {
     }
 
     // Allocate Shared Memory 
-    size_t turn_size = sizeof(std::atomic<int>);
-    size_t flags_size = N * sizeof(std::atomic<int>);
-    size_t total_size = turn_size + flags_size;
+    size_t choosing_size = N * sizeof(std::atomic<int>);
+    size_t number_size = N * sizeof(std::atomic<int>);
+    size_t total_size = choosing_size + number_size;
     shared_mem_size_global = total_size;
 
  
@@ -106,12 +113,13 @@ int main(int argc, char* argv[]) {
     }
     shared_mem_global = shared_mem; 
 
-    std::atomic<int>* turn_ptr = static_cast<std::atomic<int>*>(shared_mem);
-    std::atomic<int>* flags_ptr = reinterpret_cast<std::atomic<int>*>(static_cast<char*>(shared_mem) + turn_size);
+    std::atomic<int>* choosing_ptr = reinterpret_cast<std::atomic<int>*>(static_cast<char*>(shared_mem) + choosing_size);
+    std::atomic<int>* number_ptr = reinterpret_cast<std::atomic<int>*>(static_cast<char*>(shared_mem) + number_size);
 
-    turn_ptr =  new std::atomic<int>(0); 
+   // turn_ptr =  new std::atomic<int>(0); 
     for (int i = 0; i < N; ++i) {
-        new (flags_ptr + i) std::atomic<int>(0);
+        new (choosing_ptr + i) std::atomic<int>(0);
+        new (number_ptr + i) std::atomic<int>(0);
     }
 
     // Fork Processes
@@ -124,7 +132,7 @@ int main(int argc, char* argv[]) {
         pid = fork();
 
         if (pid == 0) { 
-            process_function(i, N, turn_ptr, flags_ptr);
+            process_function(i, N, choosing_ptr, number_ptr);
             exit(0); 
         } else { 
             child_pids.push_back(pid); 
@@ -144,11 +152,10 @@ int main(int argc, char* argv[]) {
 
      std::cout << "Parent process cleaning up shared memory..." << std::endl;
 
-    turn_ptr->~atomic();
     for (int i = 0; i < N; ++i) {
-        (flags_ptr + i)->~atomic();
+        (choosing_ptr + i)->~atomic();
+        (number_ptr + i)->~atomic();
     }
-
      shared_mem_global = nullptr; // Clear global pointer
 
     std::cout << "Parent process finished." << std::endl;
