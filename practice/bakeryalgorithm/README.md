@@ -1,1 +1,0 @@
-Demonstration for Bakery Algorithm

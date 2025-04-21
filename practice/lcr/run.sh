@@ -1,1 +1,0 @@
-./build/lcr 3
