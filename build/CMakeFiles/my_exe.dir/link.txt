@@ -1,1 +1,0 @@
-/opt/homebrew/opt/llvm/bin/clang++  -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.4.sdk -Wl,-headerpad_max_install_names CMakeFiles/my_exe.dir/src/main.cpp.o CMakeFiles/my_exe.dir/src/Network.cpp.o CMakeFiles/my_exe.dir/src/Node.cpp.o -o my_exe
