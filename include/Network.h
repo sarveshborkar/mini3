@@ -10,6 +10,11 @@
 class Node;
 
 class Network {
+
+private:
+    std::mutex mtx;
+    std::map<int, std::shared_ptr<Node>> nodes;
+
 public:
     Network();
     ~Network();
@@ -35,9 +40,6 @@ public:
     // Get the pointer to a node by ID
     std::shared_ptr<Node> getNode(int nodeId);
 
-private:
-    std::mutex mtx;
-    std::map<int, std::shared_ptr<Node>> nodes;
 };
 
 #endif
