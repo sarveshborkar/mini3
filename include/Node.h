@@ -2,12 +2,12 @@
 #define NODE_H
 
 #include <vector>
-#include <string>
 #include <mutex>
 #include <thread>
 #include <random>
 #include <atomic>
 #include "Network.h"
+
 
 class Network;
 
@@ -17,8 +17,7 @@ private:
     int nodeId;
     Network* network;
 
-    // Tasks are string as part of demo.
-    std::vector<std::string> taskQueue;
+    std::vector<Task> taskQueue;
     double cpuUsage;      // 0..100, simulated
     double memoryUsage;   // 0..100, simulated
 
@@ -71,13 +70,15 @@ public:
     double computeScore();
 
     // Add tasks to this node's queue
-    void addTasks(const std::vector<std::string>& tasks);
+    void addTasks(const std::vector<Task>& tasks);
 
     // Get the Node's ID
     int getId() const { return nodeId; }
     
     // Extract task for stealing and moving to another node.
-    std::vector<std::string> extractTasksForSteal();
+    std::vector<Task> extractTasksForSteal();
+
+    void copyTasks(std::vector<Task>& taskList, std::vector<Task>& taskQueue, int numToShare);
 
     // Perform the task-stealing from the chosen donor
     void stealSomeTasks(int donorId);

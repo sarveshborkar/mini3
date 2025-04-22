@@ -1,5 +1,6 @@
 #include "Network.h"
 #include "Node.h"
+#include "Task.h"
 #include <iostream>
 #include <algorithm>
 
@@ -58,7 +59,7 @@ std::vector<int> Network::findOverloadedNodes(int currentNodeId) {
     return overloaded;
 }
 
-void Network::transferTasks(int senderId, int receiverId, const std::vector<std::string>& tasks) {
+void Network::transferTasks(int senderId, int receiverId, const std::vector<Task>& tasks) {
     auto receiver = getNode(receiverId);
     if (!receiver) return;
 
@@ -75,7 +76,7 @@ void Network::requestTasks(int donorId, int receiverId) {
         return;
     }
 
-    std::vector<std::string> stolen = donor->extractTasksForSteal();
+    std::vector<Task> stolen = donor->extractTasksForSteal();
 
     if (!stolen.empty()) {
         receiver->addTasks(stolen);

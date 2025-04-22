@@ -52,7 +52,7 @@ double Node::computeScore() {
 /*
     Add Tasks to the queue. 
 */
-void Node::addTasks(const std::vector<std::string>& tasks) {
+void Node::addTasks(const std::vector<Task>& tasks) {
     std::lock_guard<std::mutex> lock(mtx);
     for (auto& t : tasks) {
         taskQueue.push_back(t);
@@ -138,7 +138,7 @@ void Node::attemptStealTasks(double currentScore) {
 }
 
 void Node::shareSomeTasks(int receiverId) {
-    std::vector<std::string> tasksToShare;
+    std::vector<Task> tasksToShare;
     {
         std::lock_guard<std::mutex> lock(mtx);
         if (taskQueue.empty()) {
@@ -166,10 +166,10 @@ void Node::stealSomeTasks(int donorId) {
     network->requestTasks(donorId, nodeId);
 }
 
-std::vector<std::string> Node::extractTasksForSteal() {
+std::vector<Task> Node::extractTasksForSteal() {
     std::lock_guard<std::mutex> lock(mtx);
 
-    std::vector<std::string> stolenTasks;
+    std::vector<Task> stolenTasks;
     if (!taskQueue.empty()) {
         // Stealing half the tasks
         int toSteal = static_cast<int>(taskQueue.size() / 2);

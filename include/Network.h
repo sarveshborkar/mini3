@@ -4,8 +4,8 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <Task.h>
 #include <vector>
-#include <string>
 
 class Node;
 
@@ -32,7 +32,7 @@ public:
     std::vector<int> findOverloadedNodes(int excludeId);
 
     // Transfer tasks from one node to another (work sharing)
-    void transferTasks(int senderId, int receiverId, const std::vector<std::string>& tasks);
+    void transferTasks(int senderId, int receiverId, const std::vector<Task>& tasks);
 
     // Request tasks from donor (work stealing)
     void requestTasks(int donorId, int receiverId);
