@@ -9,9 +9,40 @@
 #include <atomic>
 #include "Network.h"
 
-class Network; // Forward declaration to avoid circular includes
+class Network;
 
 class Node {
+
+private:
+    int nodeId;
+    Network* network;
+
+    // Tasks are string as part of demo.
+    std::vector<std::string> taskQueue;
+    double cpuUsage;      // 0..100, simulated
+    double memoryUsage;   // 0..100, simulated
+
+    // Weights based on CPU, Mem & Queue Length
+    double wCpu;
+    double wMem;
+    double wQueue;
+
+    /* Thresholds: 
+        Above highThreshold = overloaded
+        Below lowThreshold = underloaded
+    */
+    double highThreshold;
+    double lowThreshold;
+
+    // Concurrency Resoureces
+    std::mutex mtx;
+    std::thread worker;
+    std::atomic<bool> running{false};
+
+    // Random Generator
+    std::default_random_engine rng;
+    std::uniform_real_distribution<double> dist;
+
 public:
     Node(int id, Network* network);
     ~Node();
@@ -26,12 +57,13 @@ public:
     // Add tasks to this node's queue
     void addTasks(const std::vector<std::string>& tasks);
 
-    // Get the node's ID
+    // Get the Node's ID
     int getId() const { return nodeId; }
 
+    // Get Mutex dedicated for this node.
     std::mutex& getMutex();
 
-    // Actually perform the task-stealing from the chosen donor
+    // Perform the task-stealing from the chosen donor
     void stealSomeTasks(int donorId);
 
 private:
@@ -49,31 +81,6 @@ private:
 
     // Actually perform the task-sharing with the chosen receiver
     void shareSomeTasks(int receiverId);
-
-private:
-    int nodeId;
-    Network* network;
-
-    // For simplicity, tasks are strings
-    std::vector<std::string> taskQueue;
-    double cpuUsage;      // 0..100, simulated
-    double memoryUsage;   // 0..100, simulated
-    double wCpu;
-    double wMem;
-    double wQueue;
-
-    // Thresholds: above highThreshold = overloaded, below lowThreshold = underloaded
-    double highThreshold;
-    double lowThreshold;
-
-    // Concurrency
-    std::mutex mtx;
-    std::thread worker;
-    std::atomic<bool> running{false};
-
-    // Random generator
-    std::default_random_engine rng;
-    std::uniform_real_distribution<double> dist;
 };
 
 #endif

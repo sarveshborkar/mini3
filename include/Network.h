@@ -14,7 +14,7 @@ public:
     Network();
     ~Network();
 
-    // Register a new node into this "network"
+    // Register a new node into this network
     void registerNode(std::shared_ptr<Node> node);
 
     // Get the current score of a node
@@ -32,12 +32,11 @@ public:
     // Request tasks from donor (work stealing)
     void requestTasks(int donorId, int receiverId);
 
-    // For convenience, get the pointer to a node by ID
+    // Get the pointer to a node by ID
     std::shared_ptr<Node> getNode(int nodeId);
 
 private:
     std::mutex mtx;
-    // nodeId -> Node
     std::map<int, std::shared_ptr<Node>> nodes;
 };
 
