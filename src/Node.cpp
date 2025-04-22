@@ -78,7 +78,7 @@ void Node::run() {
     }
 }
 
-
+// TODO
 void Node::simulateResourceUsage() {
     std::lock_guard<std::mutex> lock(mtx);
 
@@ -166,8 +166,19 @@ void Node::stealSomeTasks(int donorId) {
     network->requestTasks(donorId, nodeId);
 }
 
-std::mutex& Node::getMutex(){
-    return mtx;
+std::vector<std::string> Node::extractTasksForSteal() {
+    std::lock_guard<std::mutex> lock(mtx);
+
+    std::vector<std::string> stolenTasks;
+    if (!taskQueue.empty()) {
+        // Stealing half the tasks
+        int toSteal = static_cast<int>(taskQueue.size() / 2);
+        if (toSteal > 0) {
+            stolenTasks.insert(stolenTasks.end(), taskQueue.begin(), taskQueue.begin() + toSteal);
+            taskQueue.erase(taskQueue.begin(), taskQueue.begin() + toSteal);
+        }
+    }
+    return stolenTasks;
 }
 
 double Node::getLowThreshold(){

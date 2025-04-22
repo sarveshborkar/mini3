@@ -75,13 +75,13 @@ public:
 
     // Get the Node's ID
     int getId() const { return nodeId; }
-
-    // Get Mutex dedicated for this node.
-    std::mutex& getMutex();
+    
+    // Extract task for stealing and moving to another node.
+    std::vector<std::string> extractTasksForSteal();
 
     // Perform the task-stealing from the chosen donor
     void stealSomeTasks(int donorId);
-    
+
     double getLowThreshold();
 
     double getHighThreshold();
