@@ -43,6 +43,22 @@ private:
     std::default_random_engine rng;
     std::uniform_real_distribution<double> dist;
 
+private:
+    // Main loop for simulating load and performing share/steal decisions
+    void run();
+
+    // Simulate random CPU/memory usage changes
+    void simulateResourceUsage();
+
+    // Try to share tasks if overloaded
+    void attemptShareTasks(double currentScore);
+
+    // Try to steal tasks if underloaded
+    void attemptStealTasks(double currentScore);
+
+    // Actually perform the task-sharing with the chosen receiver
+    void shareSomeTasks(int receiverId);
+
 public:
     Node(int id, Network* network);
     ~Node();
@@ -65,22 +81,10 @@ public:
 
     // Perform the task-stealing from the chosen donor
     void stealSomeTasks(int donorId);
+    
+    double getLowThreshold();
 
-private:
-    // Main loop for simulating load and performing share/steal decisions
-    void run();
-
-    // Simulate random CPU/memory usage changes
-    void simulateResourceUsage();
-
-    // Try to share tasks if overloaded
-    void attemptShareTasks(double currentScore);
-
-    // Try to steal tasks if underloaded
-    void attemptStealTasks(double currentScore);
-
-    // Actually perform the task-sharing with the chosen receiver
-    void shareSomeTasks(int receiverId);
+    double getHighThreshold();
 };
 
 #endif

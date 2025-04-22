@@ -15,14 +15,15 @@ Node::Node(int id, Network* net)
       wCpu(0.4),
       wMem(0.3),
       wQueue(0.3),
-      highThreshold(60.0),
-      lowThreshold(40.0),
+      highThreshold(70.0),
+      lowThreshold(30.0),
       rng(std::random_device{}()),
       dist(-5.0, 5.0)
 {}
 
 Node::~Node() {
-    stop(); // Ensure the thread is joined if user forgot
+    // Ensure the thread is joined if user forgot
+    stop(); 
 }
 
 void Node::start() {
@@ -37,15 +38,20 @@ void Node::stop() {
     }
 }
 
+/*
+    Returns the weighted score based on CPU, Memory & Queue Length.
+*/
 double Node::computeScore() {
     std::lock_guard<std::mutex> lock(mtx);
-    // Weighted sum of CPU usage, memory usage, and queue length
     double score = wCpu   * cpuUsage
                  + wMem   * memoryUsage
                  + wQueue * static_cast<double>(taskQueue.size());
     return score;
 }
 
+/*
+    Add Tasks to the queue. 
+*/
 void Node::addTasks(const std::vector<std::string>& tasks) {
     std::lock_guard<std::mutex> lock(mtx);
     for (auto& t : tasks) {
@@ -67,11 +73,11 @@ void Node::run() {
         } else if (currentScore < lowThreshold) {
             attemptStealTasks(currentScore);
         }
-
         // Sleep for a short time
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 }
+
 
 void Node::simulateResourceUsage() {
     std::lock_guard<std::mutex> lock(mtx);
@@ -162,4 +168,12 @@ void Node::stealSomeTasks(int donorId) {
 
 std::mutex& Node::getMutex(){
     return mtx;
+}
+
+double Node::getLowThreshold(){
+    return lowThreshold;
+}
+
+double Node::getHighThreshold(){
+    return highThreshold;
 }

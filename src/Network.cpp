@@ -6,11 +6,13 @@
 Network::Network() {}
 Network::~Network() {}
 
+// Register Node to the network
 void Network::registerNode(std::shared_ptr<Node> node) {
     std::lock_guard<std::mutex> lock(mtx);
     nodes[node->getId()] = node;
 }
 
+// Obtains score for a NodeId
 double Network::getNodeScore(int nodeId) {
     std::lock_guard<std::mutex> lock(mtx);
     auto it = nodes.find(nodeId);
@@ -20,35 +22,36 @@ double Network::getNodeScore(int nodeId) {
     return -1.0;
 }
 
-std::vector<int> Network::findUnderloadedNodes(int excludeId) {
+std::vector<int> Network::findUnderloadedNodes(int currentNodeId) {
+    std::shared_ptr<Node> currentNode = getNode(currentNodeId); 
     std::vector<int> underloaded;
     std::lock_guard<std::mutex> lock(mtx);
 
     for (auto& kv : nodes) {
         int nid = kv.first;
-        if (nid == excludeId) continue;
+        if (nid == currentNodeId) continue;
         
         double score = kv.second->computeScore();
-        // We can re-check the thresholds from the Node's perspective:
-        // This example just does a quick approach:
-        if (score < 30.0) { // Hard-coded for demo; you could query the node's lowThreshold
+
+        if (score < currentNode->getLowThreshold()) {
             underloaded.push_back(nid);
         }
     }
     return underloaded;
 }
 
-std::vector<int> Network::findOverloadedNodes(int excludeId) {
+std::vector<int> Network::findOverloadedNodes(int currentNodeId) {
+    std::shared_ptr<Node> currentNode = getNode(currentNodeId); 
     std::vector<int> overloaded;
     std::lock_guard<std::mutex> lock(mtx);
 
     for (auto& kv : nodes) {
         int nid = kv.first;
-        if (nid == excludeId) continue;
+        if (nid == currentNodeId) continue;
 
         double score = kv.second->computeScore();
-        // Hard-coded check for demo:
-        if (score > 70.0) { // Compare to the node's highThreshold
+
+        if (score > currentNode->getHighThreshold()) {
             overloaded.push_back(nid);
         }
     }
@@ -65,6 +68,7 @@ void Network::transferTasks(int senderId, int receiverId, const std::vector<std:
               << tasks.size() << " tasks to Node " << receiverId << std::endl;
 }
 
+// TODO
 void Network::requestTasks(int donorId, int receiverId) {
     auto donor = getNode(donorId);
     auto receiver = getNode(receiverId);
